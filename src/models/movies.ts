@@ -42,5 +42,7 @@ const movieSchema = new Schema(
     collection: "movies", // Explicitly specify the collection name
   }
 );
+movieSchema.index({title:'text', plot:'text', directors:'text', cast:'text'},
+  {weights:{title:10, plot:5, cast:3, directors:1}});
 
 export default model("Movie", movieSchema);
