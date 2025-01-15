@@ -23,6 +23,16 @@ export const fetchMovies = async (req: any, res: any) => {
           $match: matchedQueries
         },
         {
+            $addFields:{
+                popularity:{
+                    $avg:['$awards.wins', '$awards.nominations', '$imdb.rating', '$imdb.votes', '$tomatoes.viewer.rating', '$tomatoes.viewer.numReviews' ]
+                }
+            }
+        },
+        {
+            $sort:{popularity:-1}
+        },
+        {
             $skip: (pageNumber-1)*pageSizeNumber
         },
         {
@@ -33,6 +43,16 @@ export const fetchMovies = async (req: any, res: any) => {
     } else {
       
       movies = await Movie.aggregate([
+        {
+            $addFields:{
+                popularity:{
+                    $avg:['$awards.wins', '$awards.nominations', '$imdb.rating', '$imdb.votes', '$tomatoes.viewer.rating', '$tomatoes.viewer.numReviews' ]
+                }
+            }
+        },
+        {
+            $sort:{popularity:-1}
+        },
         {
             $skip:(pageNumber-1)*pageSizeNumber
         },{
@@ -68,6 +88,11 @@ export const fetchMovieById = async (req: Request, res: Response) => {
   }
 };
 
+
+
+
+
+
 export const fetchGenres = async (req: Request, res: Response) => {
   try {
     const genres = await Movie.aggregate([
@@ -97,6 +122,13 @@ export const fetchGenres = async (req: Request, res: Response) => {
   }
 };
 
+
+
+
+
+
+
+
 export const fetchTopRated = async (req: Request, res: Response) => {
     try {
       const movies = await Movie.aggregate([
@@ -109,7 +141,7 @@ export const fetchTopRated = async (req: Request, res: Response) => {
           $sort: { "imdb.rating": -1 }, // Correctly reference the rating field
         },
         {
-          $limit: 10, // Optionally limit the number of top-rated movies to a specific count (e.g., 10)
+          $limit: 21, // Optionally limit the number of top-rated movies to a specific count (e.g., 10)
         },
       ]);
       res.status(200).send(movies); // Return the top-rated movies
