@@ -1,0 +1,35 @@
+import express, { urlencoded } from 'express'; 
+import dotenv from 'dotenv';
+import cors from 'cors';
+import movieRouter from './src/router/movie';
+
+const app = express(); 
+
+dotenv.config({
+    path: './.env'
+}); 
+
+
+app.use(
+    cors({
+        origin: process.env.CORS_ORIGIN, 
+        credentials:true
+    })
+)
+
+//Common middlewares
+app.use(express.json({limit:"16KB"})); 
+app.use(express.urlencoded({extended:true, limit:"16KB"}));
+app.use(express.static("public"));
+
+
+// async function fetchMovies(){
+//     const movies = 
+// }
+
+app.get('/', (req, res)=>{
+    res.send("Jai Shree Ram");
+})
+app.use('/movie',movieRouter )
+
+export {app}; 
