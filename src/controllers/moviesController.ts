@@ -130,6 +130,12 @@ export const fetchGenres = async (req: Request, res: Response) => {
 
 
 export const fetchTopRated = async (req: Request, res: Response) => {
+    const {page=1, size=12} = req.query; 
+    const pageNumber = parseInt(page as string); 
+    const pageSize = parseInt(size as string); 
+    const totalMovies = 500; 
+
+
     try {
       const movies = await Movie.aggregate([
         {
@@ -137,14 +143,24 @@ export const fetchTopRated = async (req: Request, res: Response) => {
               "imdb.rating": { $ne: "" } // Filter out movies with an empty rating
             }
           },
+          
         {
           $sort: { "imdb.rating": -1 }, // Correctly reference the rating field
         },
         {
-          $limit: 21, // Optionally limit the number of top-rated movies to a specific count (e.g., 10)
+            $limit:totalMovies
+          },
+        {
+            $skip:(pageNumber-1)*pageSize
+        },
+        {
+          $limit: pageSize, // Optionally limit the number of top-rated movies to a specific count (e.g., 10)
         },
       ]);
-      res.status(200).send(movies); // Return the top-rated movies
+      const totalPages = Math.ceil(totalMovies/pageSize);
+      res.status(200).send({
+        movies, pageNumber, totalMovies, totalPages
+      }); // Return the top-rated movies
     } catch (err) {
       console.log("Error fetching top-rated movies:", err);
       res.status(500).send({ error: "An error occurred while fetching top-rated movies" });
