@@ -6,3 +6,5 @@ import { userDetails } from "../controllers/user.controller";
 const router = express.Router();
 
 router.get('/details', verifyToken, userDetails);
+
+export default router;
