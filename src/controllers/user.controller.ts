@@ -1,7 +1,7 @@
 import Users from "../models/users";
 import { Express, Request, Response } from "express";
 
-const userDetails = async (req: Request, res: Response) => {
+export const userDetails = async (req: Request, res: Response) => {
     const user = req.user;
     try{
         if(user){
