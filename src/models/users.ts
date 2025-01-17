@@ -3,7 +3,7 @@ import {randomBytes, createHmac, generateKey} from 'crypto'
 import { generateToken } from "../services/auth.service";
 
 const userSchema = new Schema({
-    _id: Schema.Types.ObjectId,
+    // _id: Schema.Types.ObjectId,
     name:{
         type:String, 
         required:true
