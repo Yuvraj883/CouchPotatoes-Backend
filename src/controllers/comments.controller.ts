@@ -13,7 +13,19 @@ export const fetchComments = async (req: Request, res: Response) => {
     const objectId = new mongoose.Types.ObjectId(movie_id);
 
     // Fetch comments
-    const commentsList = await comments.find({ movie_id: objectId });
+    // const commentsList = await comments.find({ movie_id: objectId });
+    const commentsList = await comments.aggregate([
+      {
+        $match:{movie_id:objectId}
+      }, 
+      {
+        $match:{isParent:true}
+      },
+      {
+      $sort:{createdAt:-1}
+
+      }
+    ])
     // console.log("Comments",commentsList);
 
     res.status(200).json({
@@ -35,5 +47,59 @@ export const fetchComments = async (req: Request, res: Response) => {
 };
 
 export const postComment = async(req:Request, res:Response)=>{
-  
+  const user = req.body.user; 
+  const movie_id = req.body.movie_id;
+  const text = req.body.text;
+  const name = user.name;
+
+  try{
+    const newComment = new comments({
+      name,
+      email: user.email,
+      text,
+      movie_id,
+    });
+
+    await newComment.save();
+    res.status(201).json({
+      success: true,
+      message: "Comment posted successfully",
+      data: newComment,
+    });
+  }catch(err){
+    console.log("Error while posting comment:", err);
+    res.status(500).json({message:"Internal server error", error:err});
   }
+  }
+
+
+
+  export const postReply = async(req:Request, res:Response)=>{
+    const user = req.body.user; 
+    const movie_id = req.body.movie_id;
+    const text = req.body.text;
+    const name = user.name;
+    const parent_id = req.body.parent_id;
+    
+
+    try{
+      const newComment = new comments({
+        name,
+        email: user.email,
+        text,
+        movie_id,
+        parent_id,
+        isParent:false
+      });
+  
+      await newComment.save();
+      res.status(201).json({
+        success: true,
+        message: "Comment posted successfully",
+        data: newComment,
+      });
+    }catch(err){
+      console.log("Error while posting comment:", err);
+      res.status(500).json({message:"Internal server error", error:err});
+    }
+    }
