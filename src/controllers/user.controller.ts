@@ -2,10 +2,12 @@ import Users from "../models/users";
 import { Express, Request, Response } from "express";
 
 export const userDetails = async (req: Request, res: Response) => {
-    const user = req.user;
+    console.log(req.body.user)
+
+    const user = req.body.user;
     try{
         if(user){
-            const userDetails = await Users.findOne({email:user.email}); 
+            const userDetails = await Users.findOne({email:user.email}).populate("likedMovies"); 
             res.status(200).json({user:userDetails});
 
         }
