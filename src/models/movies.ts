@@ -37,6 +37,8 @@ const movieSchema = new Schema(
       },
       lastUpdated: { type: Date },
     },
+    likes: { type: Number, default: 0 }, // Number of likes
+    likedBy: [{ type: Schema.Types.ObjectId, ref: "User" }],
   },
   {
     collection: "movies", // Explicitly specify the collection name
