@@ -2,12 +2,16 @@ import express, { urlencoded } from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import movieRouter from './src/router/movie';
+import authRouter from './src/router/auth.router';
+import userRouter from './src/router/user.router';
+import commentsRouter from './src/router/comments.router';
+
 
 const app = express(); 
 
 dotenv.config({
     path: './.env'
-}); 
+});  
 
 
 app.use(
@@ -18,7 +22,7 @@ app.use(
 )
 
 //Common middlewares
-app.use(express.json({limit:"16KB"})); 
+app.use(express.json()); 
 app.use(express.urlencoded({extended:true, limit:"16KB"}));
 app.use(express.static("public"));
 
@@ -30,6 +34,8 @@ app.use(express.static("public"));
 app.get('/', (req, res)=>{
     res.send("Jai Shree Ram");
 })
-app.use('/movie',movieRouter )
-
+app.use('/movie',movieRouter ); 
+app.use('/authentication', authRouter);
+app.use('/user', userRouter);
+app.use('/comments', commentsRouter);
 export {app}; 

@@ -1,5 +1,8 @@
 import Movie from "../models/movies";
 import { Request, Response } from "express";
+import Users from "../models/users";
+import { ObjectId } from "mongodb";
+import movies from "../models/movies";
 
 export const fetchMovies = async (req: any, res: any) => {
   const {page=1, pageSize=9} = req.query;
@@ -130,6 +133,12 @@ export const fetchGenres = async (req: Request, res: Response) => {
 
 
 export const fetchTopRated = async (req: Request, res: Response) => {
+    const {page=1, size=12} = req.query; 
+    const pageNumber = parseInt(page as string); 
+    const pageSize = parseInt(size as string); 
+    const totalMovies = 500; 
+
+
     try {
       const movies = await Movie.aggregate([
         {
@@ -137,16 +146,86 @@ export const fetchTopRated = async (req: Request, res: Response) => {
               "imdb.rating": { $ne: "" } // Filter out movies with an empty rating
             }
           },
+          
         {
           $sort: { "imdb.rating": -1 }, // Correctly reference the rating field
         },
         {
-          $limit: 21, // Optionally limit the number of top-rated movies to a specific count (e.g., 10)
+            $limit:totalMovies
+          },
+        {
+            $skip:(pageNumber-1)*pageSize
+        },
+        {
+          $limit: pageSize, // Optionally limit the number of top-rated movies to a specific count (e.g., 10)
         },
       ]);
-      res.status(200).send(movies); // Return the top-rated movies
+      const totalPages = Math.ceil(totalMovies/pageSize);
+      res.status(200).send({
+        movies, pageNumber, totalMovies, totalPages
+      }); // Return the top-rated movies
     } catch (err) {
       console.log("Error fetching top-rated movies:", err);
       res.status(500).send({ error: "An error occurred while fetching top-rated movies" });
     }
   };
+
+
+
+
+  export const likeUnlikeMovie = async (req: Request, res: Response) => {
+    const { id } = req.params; // movie ID
+    const { user } = req.body; // user info from the authenticated request
+    
+    try {
+      console.log("Like function called", user.email); 
+      // Fetch the movie and the user
+      const movie = await Movie.findById(id);
+      const likedByUser = await Users.findOne({ email: user.email }) as any;
+  
+      // Check if both movie and user exist
+      if (!movie || !likedByUser) {
+    res.status(404).send({ error: "Movie or User not found" });
+    return;
+      }
+  
+      // Check if the user already liked this movie
+      const alreadyLiked = movie.likedBy.includes(likedByUser._id);
+      
+      if (alreadyLiked) {
+        // User is unliking the movie
+        movie.likes -= 1;
+        // Remove user from the likedBy array
+        movie.likedBy = movie.likedBy.filter(
+          (userId: ObjectId) => userId.toString() !== likedByUser._id.toString()
+        );
+        // Update the user's likedMovies list
+        likedByUser.likedMovies = likedByUser.likedMovies.filter(
+          (movieId: ObjectId) => movieId.toString() !== movie._id?.toString()
+        );
+      } else {
+        // User is liking the movie
+        movie.likes += 1;
+        // Add user to the likedBy array
+        movie.likedBy.push(likedByUser._id);
+        // Update the user's likedMovies list
+        likedByUser.likedMovies.push(movie._id);
+      }
+  
+      // Save the changes to the movie and user
+      await movie.save();
+      await likedByUser.save();
+  
+       res.status(200).send({
+        message: `Movie ${alreadyLiked ? "unliked" : "liked"} successfully`,
+        likes: movie.likes,
+      });
+      
+    } catch (err) {
+      console.log("Like function called", user.email); 
+
+      console.error("Error while liking the movie:", err);
+      res.status(500).send({ error: "An error occurred while liking the movie" });
+    }
+  };
+  
